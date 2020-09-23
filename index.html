@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>מורפיקס - כלי מורפולוגיה לפעלים</title>
+
+  <meta charset="utf-8">
+
+  <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/css/bootstrap-select.css">
+  <link rel="shortcut icon" href="assets/img/favicon.ico" /> 
+  
+  <style>
+	html {
+		position: relative;
+		min-height: 100%;
+	}
+	
+    body {
+      padding-top: 70px;
+	  /* Margin bottom by footer height */
+	  margin-bottom: 60px;
+	  Font-family: Calibri;
+    }
+	
+	.bootstrap-select.btn-group .btn .filter-option {
+		text-align: right   
+	}
+
+	.footer {
+	  position: absolute;
+	  bottom: 0;
+	  width: 100%;
+	  /* Set the fixed height of the footer here */
+	  height: 60px;
+	  background-color: #f5f5f5;
+	}
+
+
+	/* Custom page CSS
+	-------------------------------------------------- */
+	/* Not required for template or sticky footer method. */
+
+
+	.container .text-muted {
+	  margin: 20px 0;
+	}
+
+	.footer > .container {
+	  padding-right: 15px;
+	  padding-left: 15px;
+	}
+	
+	.jumbotron{
+		padding-top: 5px;
+		padding-bottom: 20px;
+	}
+  </style>
+
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/bootstrap.min.js"></script>
+  <script src="assets/js/bootstrap-select.js"></script>
+  <script src="assets/js/transcription.js"></script>
+  <script src="assets/js/clipboard.min.js"></script>
+  
+  <script>
+		function next(){
+			var root = $("#root").val();
+			var binyan = $("#binyan").val();
+			var ayin = $("#ayin").val();
+			var active = $("#active").val();
+			var tense = $("#tense").val();
+			var subject = $("#subject").val();
+			var selectMusa = $("#selectMusa").val();
+			var object = $("#object").val();
+			var mode = $("#moce").val();
+			var indirect = $("#indirect").val();
+			var prefixes = $("#prefixes").val();
+			var negative = $("#negative").val();
+			
+			$.ajax({
+				url: "go.php",
+				type: "POST",
+				data: {root: root, binyan: binyan, ayin: ayin, active: active, tense: tense, subject: subject, object: object, selectMusa: selectMusa, mode: mode, indirect: indirect, prefixes: prefixes, negative: negative},
+				cache: false,
+				success : function(results){
+					if(results[0] == "~"){
+						$("#error").html(results.substr(1));
+						$("#error").show("slow");
+						$('#error').delay(5000).fadeOut(1000);
+					}
+					else{
+						$("#results").val(results);
+						$("#error").slideUp("slow");
+						$("#copy").show();
+					}
+				}
+			});
+		}
+		
+		// מושא ישיר/עקיף
+		$(document).on("change", "#selectMusa", function() {
+			if($(this).val() == 'direct'){
+				$('#musa-yashir').show();
+				$('#musa-akif').hide();
+			}
+			else if($(this).val() == 'indirect'){
+				$('#musa-yashir').hide();
+				$('#musa-akif').show();
+			}
+			else{
+				$('#musa-yashir').hide();
+				$('#musa-akif').hide();
+			}
+		});
+		
+		// הצג ע הפועל בעתיד אם בניין 1
+		$(document).on("change", "#binyan", function() {
+			if($(this).val() == 1){
+				$('#ayin-future').show();
+			}
+			else{
+				$('#ayin-future').hide();
+			}
+		});
+		
+		function onLoad(){
+			var clipboard = new Clipboard('#copy');
+			clipboard.on('success', function(e) {
+				$('#error').hide();
+				$("#yeah").text("ההעתקה בוצעה בהצלחה :)");
+				$('#yeah').show();
+				$('#yeah').delay(3000).fadeOut(1000);
+
+			});
+			clipboard.on('error', function(e) {
+				$('#yeah').hide();
+				$("#error").text("לא הצלחנו להעתיק :(");
+				$('#error').show();
+				$('#error').delay(10000).fadeOut(1000);
+			});
+			
+			
+			// current year
+			var d = new Date();
+			var n = d.getFullYear();
+			if(n >= 2017){
+				$(".text-muted").append(" " + n + " - 2016");
+				$(".text-muted").append("    |     v. 1.0.1");
+			}
+		}
+		
+  </script>
+  
+</head>
+<body onload="onLoad();">
+
+	<nav class="navbar navbar-default navbar-fixed-top" role="navigation" align="center">
+	  <div class="container"><img src="assets/img/morfix2.png" border="0" width="296" height="76">
+		<div class="navbar-header">
+		  <a class="navbar-brand"></a>
+		</div>
+	  </div>
+	</nav>
+
+	<div class="container">
+
+		<br>
+		<br>
+		<iframe name="target" style="display:none;"></iframe>
+		<form method="post" target="target" onsubmit="next();">
+			<div class="jumbotron" dir="rtl">
+				<p id="error" class="bg-danger" style="display:hidden; font-weight: ; text-align: center; color: red;"></p>
+				<p id="yeah" class="bg-success" style="display:hidden; font-weight: ; text-align: center; color: green;"></p>
+				<table style="width:100%">
+					<tbody>
+					<tr>
+					<td width="50%">
+						<b>שורש:</b>
+						<input type="text" class="form-control trans" placeholder="הכנס שורש בערבית (תעתוק: ctrl+g)" id="root" accesskey="1" maxlength="15" style="width:240px;">
+						<br>
+						
+						<b>בניין:</b>
+						<div class="form-group">
+							<select id="binyan" class="selectpicker" data-live-search="false" data-live-search-placeholder="Search" data-actions-box="true">
+								<option value="1">1</option>
+								<option value="2">2</option>
+								<option value="3">3</option>
+								<option value="4">4</option>
+								<option value="5">5</option>
+								<option value="6">6</option>
+								<option value="7">7</option>
+								<option value="8">8</option>
+								<option value="9">9</option>
+								<option value="10">10</option>
+							</select>
+						</div>
+						
+						<div id="ayin-future" style="margin-right:20px;">
+							<b>◄ ניקוד ע' הפועל בעתיד:</b>
+							<div class="form-group">
+								<select class="selectpicker" id="ayin" data-live-search="false" data-live-search-placeholder="Search" data-actions-box="false">
+									<option value="דמה">דמה</option>
+									<option value="פתחה">פתחה</option>
+									<option value="כסרה">כסרה</option>
+								</select>
+							</div>
+						</div>
+						
+						<b>פעיל - סביל:</b>
+						<div class="form-group">
+							<select class="selectpicker" id="active" title="בחר פעיל ו/או סביל" multiple data-live-search="false" data-live-search-placeholder="Search" data-actions-box="false">
+								<option data-hidden="true"></option>
+								<option value="0" selected>פעיל</option>
+								<option value="1">סביל</option>
+							</select>
+						</div>
+						
+						<b>זמן:</b>
+						<div class="form-group">
+							<select class="selectpicker" id="tense" title="בחר זמנים" multiple data-live-search="false" data-live-search-placeholder="Search" data-actions-box="false">
+								<option data-hidden="true"></option>
+								<option value="past" selected>עבר</option>
+								<option value="present" selected>הווה-עתיד</option>
+								<option value="imper" selected>ציווי</option>
+								<option value="middle" disabled>בינוני</option>
+							</select>
+						</div>
+						
+						<b>נושא הפעולה:</b>
+						<div class="form-group">
+							<select class="selectpicker" id="subject" title="בחר כינויי גוף לנושא" multiple data-live-search="false" data-live-search-placeholder="Search" data-actions-box="true">
+								<option data-hidden="true"></option>
+								<option value="אני" selected>אני</option>
+								<option value="אתה" selected>אתה</option>
+								<option value="את" selected>את</option>
+								<option value="הוא" selected>הוא</option>
+								<option value="היא" selected>היא</option>
+								<option value="אנחנו" selected>אנחנו</option>
+								<option value="אתם" selected>אתם</option>
+								<option value="אתן">אתן</option>
+								<option value="שניכם">שניכם</option>
+								<option value="שתיכן">שתיכן</option>
+								<option value="הם" selected>הם</option>
+								<option value="הן" selected>הן</option>
+								<option value="שניהם">שניהם</option>
+								<option value="שתיהן">שתיהן</option>
+							</select>
+						</div>
+						
+						<b>הוסף מושא:</b>
+						<div class="form-group">
+							<select class="selectpicker" id="selectMusa" title="הפועל מצריך מושא?"  multiple data-max-options="1">
+								<option data-hidden="true"></option>
+								<option value="direct">מושא ישיר</option>
+								<option value="indirect">מושא עקיף - (ل)</option>
+							</select>
+						</div>
+						
+						<div id="musa-yashir" style="display:none; margin-right:20px;">
+							<b>◄ גופי מושא ישיר:</b>
+							<div class="form-group">
+								<select class="selectpicker" id="object" title="תוכל לבחור מושא ישיר" multiple data-live-search="false" data-live-search-placeholder="Search" data-actions-box="true">
+									<option data-hidden="true"></option>
+									<option value="ني">אני</option>
+									<option value="ك">אתה</option>
+									<option value="كي">את</option>
+									<option value="ه">הוא</option>
+									<option value="ها">היא</option>
+									<option value="نا">אנחנו</option>
+									<option value="كو">אתם</option>
+									<option value="ن">אתן</option>
+									<option value="كما">שניכם, שתיכן</option>
+									<option value="هم">הם</option>
+									<option value="هن">הן</option>
+									<option value="هما">שניהם, שתיהן</option>
+								</select>
+							</div>
+						</div>
+						
+						<div id="musa-akif" style="display:none; margin-right:20px;">
+							<b>◄ גופי מושא עקיף:</b>
+							<div class="form-group">
+								<select class="selectpicker" id="indirect" title="תוכל לבחור מושא עקיף ل" multiple data-live-search="false" data-live-search-placeholder="Search" data-actions-box="true">
+									<option data-hidden="true"></option>
+									<option value="لي">אני</option>
+									<option value="لك">אתה</option>
+									<option value="لكي">את</option>
+									<option value="له">הוא</option>
+									<option value="لها">היא</option>
+									<option value="لنا">אנחנו</option>
+									<option value="لكو">אתם</option>
+									<option value="لكن">אתן</option>
+									<option value="لكما">שניכם, שתיכן</option>
+									<option value="لهم">הם</option>
+									<option value="لهن">הן</option>
+									<option value="لهما">שניהם, שתיהן</option>
+								</select>
+							</div>
+						</div>
+						
+						<b>תחיליות:</b>
+						<div class="form-group">
+							<select class="selectpicker" id="prefixes" title="בחר תחיליות לפעלים" multiple data-live-search="false" data-live-search-placeholder="Search" data-actions-box="true">
+								<option data-hidden="true"></option>
+								<option value="ا" selected>ا</option>
+								<option value="ب" selected>ب</option>
+								<option value="م" selected>م</option>
+								<option value="د" selected>د</option>
+								<option value="و" selected>و</option>
+								<option value="ف" selected>ف</option>
+								<option value="ح" selected>ح</option>
+								<option value="ه" selected>ه</option>
+								<option value="س" selected>س</option>
+								<option value="فل" selected>فل</option>
+								<option value="ل" selected>ل</option>
+							</select>
+						</div>
+						
+						<b>להוסיף סופית שלילה?</b>
+						<div class="form-group">
+							<select class="selectpicker" id="negative" title="תרצה להוסיף סופית שלילה?" multiple data-live-search="false" data-live-search-placeholder="Search" data-actions-box="false">
+								<option data-hidden="true"></option>
+								<option value="ش">ش</option>
+							</select>
+						</div>
+						
+						<!--<b>ספרותית - מדוברת:</b>
+						<div class="form-group">
+							<select class="selectpicker" id="mode" multiple data-live-search="false" data-live-search-placeholder="Search" data-actions-box="false">
+								<option value="ספרותית" selected>ספרותית</option>
+								<option value="מדוברת" selected>מדוברת</option>
+							</select>
+						</div>-->
+						<br>
+						<input type="submit" class="btn btn-primary" value="יאללה לך על זה!">
+					</td>
+					<td width="50%">
+						<b>התוצאות יופיעו כאן:</b>
+						<textarea id="results" class="form-control" rows="20" style="height:100%; font-size: 20px;" accesskey="2"></textarea>
+						<br>
+						<a id="copy" class="btn btn-info" data-clipboard-target="#results" style="display:none;">העתק</a>
+					</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</form>
+		<div id="results1" dir="rtl" align="center"></div>
+	</div>
+	
+	<!-- Footer begins here -->
+	<footer class="footer" dir="rtl">
+      <div class="container" align="center">
+        <p class="text-muted">Rony Utevsky ©</p>
+      </div>
+    </footer>
+	
+</body>
+</html>
